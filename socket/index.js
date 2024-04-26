@@ -26,6 +26,24 @@ io.on("connection", (socket) => {
     io.emit("get-users", activeUsers);
   });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
   // send message to a specific user
   socket.on("send-message", (data) => {
     const { receiverId } = data;

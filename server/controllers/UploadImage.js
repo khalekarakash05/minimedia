@@ -1,76 +1,60 @@
-//upload the profile image and cover image to cloudinary using multer and cloudinary
 import User from '../models/userModel.js';
 import { uploadOnCloudinary } from '../configs/cloudinary.js'; // Import the function to upload to Cloudinary
 
-
-const UploadImage = async(req, res) => {
-
+const UploadImage = async (req, res) => {
     try {
-        console.log("heare");
+        console.log("Entering UploadImage function");
 
-        // const {_id} = req.user.id;
-        // console.log("id", _id);
-        const _id = req.params;
+        const userId = req.params.id;
 
-        const profileImage = req.files?.profileImage[0]?.path;
-        const coverImage = req.files?.coverImage[0]?.path;
-
-        let profileImageFile, coverImageFile;
-        console.log("profileImage", profileImage);
-        console.log("coverImage", coverImage);
         let profileImageUrl, coverImageUrl;
 
-        if(profileImage){
-            profileImageFile = await uploadOnCloudinary(profileImage, "Akash");
-            console.log("before");
+        // Upload profile image to Cloudinary if provided
+        if (req.files?.profileImage) {
+            const profileImagePath = req.files.profileImage[0]?.path;
+            const profileImageFile = await uploadOnCloudinary(profileImagePath, "Profile_Images");
             profileImageUrl = profileImageFile.secure_url;
-            console.log("after");
-            console.log("profileImageUrl", profileImageUrl);
         }
 
-        if(coverImage){
-            coverImageFile = await uploadOnCloudinary(coverImage, "Akash");
+        // Upload cover image to Cloudinary if provided
+        if (req.files?.coverImage) {
+            const coverImagePath = req.files.coverImage[0]?.path;
+            const coverImageFile = await uploadOnCloudinary(coverImagePath, "Cover_Images");
             coverImageUrl = coverImageFile.secure_url;
-            console.log("coverImageUrl", coverImageUrl);
         }
 
-        // console.log("userid", req.user);
-        console.log("id", _id.id);
-        const id = JSON.stringify(_id);
-        console.log("id", id);
-
-        console.log("profileImage", profileImageUrl);
-        console.log("coverImage", coverImageUrl);
-        
-        const profileData = await User.findByIdAndUpdate(_id.id, {
-            
-                profilePicture: profileImageUrl || "",
-                coverPicture: coverImageUrl || "",
-            
-        }, {new: true});
-        console.log("profileData", profileData);
-
-        return res.status(200).json({ 
-            message: 'File uploaded successfully', 
-            profileData});
+        // Create an update object to hold only the non-null image URLs
+        const updateData = {};
+        if (profileImageUrl) {
+            updateData.profilePicture = profileImageUrl;
+        }
+        console.log("profileimageurl", profileImageUrl);
+        if (coverImageUrl) {
+            updateData.coverPicture = coverImageUrl;
+        }
+        console.log("coverpicture", coverImageUrl);
+        // Update the user with the non-null values
+        const updatedProfile = await User.findByIdAndUpdate(
+            userId,
+            {
+                $set: updateData,
+            },
+            { new: true }
+        );
+        // console.log("updatedprofile", updatedProfile);
+        return res.status(200).json({
+            success: true,
+            message: "Files uploaded successfully",
+            updatedProfile,
+        });
 
     } catch (error) {
-        console.log("error", error.message);
+        console.error("Error in UploadImage:", error.message);
         return res.status(500).json({
             success: false,
-            message: "Internal server error", 
-        })
+            message: "Internal server error",
+        });
     }
-
-}
+};
 
 export default UploadImage;
-
-
-
-
-
-
-
-
-

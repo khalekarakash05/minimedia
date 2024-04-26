@@ -2,6 +2,7 @@ import UserModel from "../models/userModel.js";
 
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken'
+import PostModel from "../models/postModel.js";
 
 
 // Get a User
@@ -12,12 +13,12 @@ export const getUser = async (req, res) => {
   try {
     console.log("id", id);
     const user = await UserModel.findById(id);
-    console.log("user", user)
+    // console.log("user", user)
   // const user = await UserModel.findById({_id: id});
-    console.log("user", user);
+    // console.log("user", user);
     if (user) {
       const { password, ...otherDetails } = user._doc;
-      console.log("Other Details", otherDetails);
+      // console.log("Other Details", otherDetails);
 
       res.status(200).json(otherDetails);
     } else {
@@ -76,7 +77,7 @@ export const updateUser = async (req, res) => {
         process.env.JWTKEY,
         { expiresIn: "3h" }
       );
-      console.log({user, token})
+      // console.log({user, token})
       res.status(200).json({user, token});
       }
       else{
@@ -102,12 +103,43 @@ export const updateUser = async (req, res) => {
 // Delete a user
 export const deleteUser = async (req, res) => {
   const id = req.params.id;
+  console.log("id", id);
 
-  const { currentUserId, currentUserAdmin } = req.body;
+  const currentUserId  = req.body;
+  console.log("currentUserid", currentUserId);
+  const _id = currentUserId._id;
+  console.log("id", _id);
 
-  if (currentUserId == id || currentUserAdmin) {
+  if (_id === id ) {
     try {
+      console.log("in the try block");
       await UserModel.findByIdAndDelete(id);
+      console.log("usermodeleted");
+      await PostModel.deleteMany({userId :id});
+      console.log("deleted from post collection");
+      await UserModel.updateMany(
+        {followers: id},
+        {$pull: {
+          followers: id
+        }}
+      )
+      console.log("deleted from followers");
+      await UserModel.updateMany(
+        {following : id},
+        {$pull: {
+          following: id
+        }}
+      )
+      console.log("deleted from following");
+      await PostModel.deleteMany(
+        {likes: id},
+        {
+          $pull: {
+            likes:id
+          }
+        }
+      )
+      console.log("deleted from likes");
       res.status(200).json("User Deleted Successfully!");
     } catch (error) {
       res.status(500).json(err);
@@ -123,7 +155,7 @@ export const followUser = async (req, res) => {
   const id = req.params.id;
   const { _id } = req.body;
 
-  console.log(id, _id)
+  console.log("id, _id",id, _id)
 
   if (_id == id) {
     res.status(403).json("Action Forbidden");
