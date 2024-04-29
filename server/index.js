@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-
+import path from 'path';
 
 // routes
 import AuthRoute from './routes/AuthRoute.js'
@@ -12,6 +12,7 @@ import PostRoute from './routes/PostRoute.js'
 import ChatRoute from './routes/ChatRoute.js'
 import MessageRoute from './routes/MessageRoute.js'
 import UploadRoute from './routes/UploadRoute.js'
+import exp from "constants";
 
 const app = express();
 
@@ -23,6 +24,10 @@ app.use(cors());
 // to serve images inside public folder
 app.use(express.static('public')); 
 app.use('/images', express.static('images'));
+
+const _dirname = path.dirname("");
+const buildpath = path.join(_dirname, "../client/build");
+app.use(express.static(buildpath));
 
 
 dotenv.config();
