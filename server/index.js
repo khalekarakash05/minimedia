@@ -31,7 +31,7 @@ app.use(express.static(buildpath));
 
 
 dotenv.config();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 4000;
 
 
 
